@@ -7,9 +7,7 @@ namespace LFTC_Lab4
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Grammar");
-            var grammar = Grammar.FromFile("seminar.txt");
-            Console.WriteLine(grammar.ToString());
+            UI.UI.printMenu();
         }
     }
 }

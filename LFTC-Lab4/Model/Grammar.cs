@@ -9,17 +9,29 @@ namespace LFTC_Lab4.Model
     class Production
     {
         public char RuleName;
-        public string Rule;
+        public List<string> Rules;
 
-        public Production(char ruleName, string rule)
+        public Production(char ruleName, List<string> rules)
         {
             RuleName = ruleName;
-            Rule = rule;
+            Rules = rules;
         }
+
+        public List<string> getRules()
+        {
+            return Rules;
+        }
+
         public override string ToString()
         {
-            return "\n\t" + RuleName + " -> " + Rule;
+            string end = "\n\t" + RuleName + " -> ";
+            foreach (var item in Rules)
+            {
+                end += " | " + item;
+            }
+            return end;
         }
+
     }
     class Grammar
     {
@@ -78,13 +90,20 @@ namespace LFTC_Lab4.Model
         public static List<Production> ParseRules(List<string> rules)
         {
             List<Production> result = new List<Production>();
+            List<char> usedLhs = new List<char>();
             foreach (var rule in rules)
             {
                 var lhs = rule.Split("->")[0].Trim();
                 var values = new List<string>(rule.Split("->")[1].Split('|').Select(i => i.Trim()));
-                foreach (var value in values)
-                    result.Add(new Production(lhs[0], value));
 
+                foreach (var value in values)
+                {
+                    if (!usedLhs.Contains(lhs[0]))
+                    {
+                        result.Add(new Production(lhs[0], values));
+                        usedLhs.Add(lhs[0]);
+                    }
+                }
             }
             return result;
         }
