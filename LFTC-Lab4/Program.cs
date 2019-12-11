@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LFTC_Lab4.Model;
+using System;
 
 namespace LFTC_Lab4
 {
@@ -6,7 +7,9 @@ namespace LFTC_Lab4
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            Console.WriteLine("Grammar");
+            var grammar = Grammar.FromFile("seminar.txt");
+            Console.WriteLine(grammar.ToString());
         }
     }
 }
