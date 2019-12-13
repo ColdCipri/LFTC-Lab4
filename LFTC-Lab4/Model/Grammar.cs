@@ -8,16 +8,16 @@ namespace LFTC_Lab4.Model
 {
     class Production
     {
-        public char RuleName;
+        public string RuleName;
         public List<string> Rules;
 
-        public Production(char ruleName, List<string> rules)
+        public Production(string ruleName, List<string> rules)
         {
             RuleName = ruleName;
             Rules = rules;
         }
 
-        public List<string> getRules()
+        public List<string> GetRules()
         {
             return Rules;
         }
@@ -27,9 +27,16 @@ namespace LFTC_Lab4.Model
             string end = "\n\t" + RuleName + " -> ";
             foreach (var item in Rules)
             {
-                end += " | " + item;
+                end += item + " | ";
             }
+            end = end.Substring(0, end.Length - 2);
+
             return end;
+        }
+
+        public bool HasNonTerminal(string elem)
+        {
+            return (RuleName == elem) ? true : false;
         }
 
     }
@@ -100,7 +107,7 @@ namespace LFTC_Lab4.Model
                 {
                     if (!usedLhs.Contains(lhs[0]))
                     {
-                        result.Add(new Production(lhs[0], values));
+                        result.Add(new Production(lhs[0].ToString(), values));
                         usedLhs.Add(lhs[0]);
                     }
                 }
@@ -108,7 +115,7 @@ namespace LFTC_Lab4.Model
             return result;
         }
 
-        public bool IsNonTerminal(char value)
+        public bool IsNonTerminal(string value)
         {
             return this.nonTerminals.Contains(value.ToString());
         }
@@ -118,7 +125,7 @@ namespace LFTC_Lab4.Model
             return this.terminals.Contains(value);
         }
 
-        public List<Production> GetProductionsForNonTerminal(char nonTerminal)
+        public List<Production> GetProductionsForNonTerminal(string nonTerminal)
         {
             if (!IsNonTerminal(nonTerminal))
                 throw new Exception("There is no such non terminal as: " + nonTerminal + "\n");
@@ -132,6 +139,55 @@ namespace LFTC_Lab4.Model
                + "E = { " + string.Join(",", terminals) + " }\n"
                + "P = { " + string.Join(",", productions.Select(prod => prod.ToString())) + "\n}\n"
                + "S = " + startSymbol + "\n";
+        }
+
+        public static string cannonicalCollectionOfStates(List<Production> productions)
+        {
+            int s = 0, counterForValues = 0, counterForStates = 0;
+            List<Pair<char, int>> usedStates = new List<Pair<char, int>>(); //create the list of used states
+            usedStates.Add(new Pair<char, int>('s', counterForStates));     //we add s0 as the first state
+            counterForStates++;                                             // cfs ++ => next time = s1
+
+            List<Pair<string,string>> values = new List<Pair<string,string>>(); //create the list of pairs
+            List<Pair<string, string>> valuesNew = new List<Pair<string, string>>(); //create a new list of pairs
+            values.Add(new Pair<string, string>("S'", ".S"));                   //added first pair[0]: S' -> .S
+
+            string result = usedStates[0].ToString2() + " = closure({[" + values[counterForValues].ToString() + "]}) = {[" + values[counterForValues].ToString() + "]";
+            counterForValues++;                                                 //cfv++ => next is pair[1]
+
+            foreach (var item in productions)   //we check in productions if there are other productions from S
+                if (item.RuleName == productions[0].RuleName)       // check if production starts from S
+                    foreach (var elem in item.Rules)                // adds all the rules from s to the collection
+                    {
+                        values.Add(new Pair<string, string>(item.RuleName, "." + elem)); // pair[cfv] : * -> *
+                        result += ",[" + values[counterForValues] + "]";        //write the rule(production)
+                        counterForValues++;                                     //cfv++ => 
+                    }
+
+            result += "}\n"; // we finished s0 so we have a new row
+            s++;             // s++ so we got s1 next
+
+            //while (ok)  //s1    = goto(                     s0  counter for states       ,      S' -> .S => S                       ) = closure({"
+            
+            result += "s" + s + " = goto(" + usedStates[--counterForStates].ToString2() + ", " + values[0].Value.Substring(1) + ") = closure({"; //we write s1 = goto(usedstate[cfs--], values[0].value.substr(1)
+            foreach (var item in values)
+            {
+                if (item.Value[0] == '.')
+                    foreach (var elem in productions)
+                        if (elem.HasNonTerminal(item.Value.Substring(1)))
+                        {
+                            valuesNew.Add(new Pair<string, string>(item.Key, item.Value.Substring(1) + "."));//Add new closure to values;
+                            result += "[" + valuesNew[0].ToString() + "]";
+                            counterForValues++;                                                         //cfv++
+                        }
+                          
+
+            }
+            result += "} = {[" + valuesNew[0].ToString() + "]}\n";
+
+
+
+            return result;
         }
     }
 }
